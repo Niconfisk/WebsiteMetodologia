@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Conexão Aposentadoria — Protótipo</title>
+  <style>
+    :root{--bg:#f7faf9;--card:#fff;--muted:#6b7280;--accent:#059669}
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#0f172a}
+    header{background:linear-gradient(90deg, #ecfdf5, #ffffff); padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{height:48px; width:48px; border-radius:10px; background:var(--accent); color:white; display:flex; align-items:center; justify-content:center; font-weight:700}
+    main{max-width:1000px; margin:24px auto; padding:0 18px}
+    .hero{display:grid; grid-template-columns:1fr 360px; gap:20px; align-items:center}
+    .card{background:var(--card); border-radius:12px; padding:18px; box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    h1{margin:0 0 8px 0; font-size:22px}
+    p.lead{margin:0 0 12px 0; color:var(--muted)}
+
+    /* search */
+    .search-row{display:flex; gap:10px; margin-top:16px}
+    .search-row input[type=text]{flex:1;padding:10px 12px;border:1px solid #e6e9ee;border-radius:8px}
+    .search-row input[type=checkbox]{transform:scale(1.1)}
+
+    /* grid of lawyers */
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; margin-top:18px}
+    .lawyer{padding:12px; border-radius:10px; border:1px solid #eef2f6; background:linear-gradient(180deg,#fff,#fbfdff); display:flex; flex-direction:column; justify-content:space-between}
+    .meta{display:flex; justify-content:space-between; align-items:center}
+    .meta .name{font-weight:600}
+    .meta .chip{font-size:12px; padding:4px 8px; border-radius:999px}
+    .available{background:#ecfdf5;color:#065f46}
+    .unavailable{background:#f1f5f9;color:#6b7280}
+    .bio{color:var(--muted); margin-top:8px; font-size:14px}
+    .actions{display:flex; gap:8px; margin-top:12px}
+    button{cursor:pointer}
+    .btn{padding:8px 12px; border-radius:8px; border:1px solid transparent}
+    .btn.primary{background:var(--accent); color:white}
+    .btn.ghost{background:transparent; border:1px solid #e6e9ee}
+
+    /* footer / requests */
+    .requests-btn{margin-left:8px}
+
+    /* modal */
+    .modal-back{position:fixed; inset:0; background:rgba(2,6,23,0.45); display:none; align-items:center; justify-content:center; padding:18px}
+    .modal{width:100%; max-width:520px; background:var(--card); border-radius:12px; padding:18px}
+
+    /* small screens */
+    @media (max-width:820px){
+      .hero{grid-template-columns:1fr;}
+      .card.right{order:2}
+    }
+
+    footer{max-width:1000px;margin:20px auto;padding:0 18px;color:var(--muted); font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* simple table for requests */
+    .req-list{margin-top:10px}
+    .req-item{padding:10px;border-radius:8px;border:1px solid #eef2f6;margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">CA</div>
+      <div>
+        <div style="font-weight:700">Conexão Aposentadoria</div>
+        <div style="font-size:13px;color:var(--muted)">Conectando quem precisa a advogados voluntários</div>
+      </div>
+    </div>
+
+    <div>
+      <span id="user-bubble" style="margin-right:10px;color:var(--muted)"></span>
+      <button id="btn-login" class="btn ghost">Entrar</button>
+      <button id="btn-logout" class="btn" style="display:none">Sair</button>
+      <button id="btn-requests" class="btn ghost requests-btn">Minhas solicitações</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="card">
+        <h1>Ajude a garantir uma aposentadoria segura</h1>
+        <p class="lead">Procure por advogados voluntários especializados em previdência — peça orientação e registre solicitações. (Protótipo front-end somente.)</p>
+        <div class="search-row">
+          <input type="text" id="q" placeholder="Pesquisar por nome, cidade ou descrição...">
+          <input type="text" id="area" placeholder="Área (ex: Previdenciário)" style="width:190px">
+          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="onlyAvail"> Somente disponíveis</label>
+        </div>
+
+        <div id="grid" class="grid" aria-live="polite"></div>
+      </div>
+
+      <aside class="card right">
+        <h3 style="margin-top:0">Sobre o projeto</h3>
+        <p class="small">Plataforma de conexão entre pessoas em processo de aposentadoria e advogados voluntários. Nesta demonstração é possível buscar advogados e enviar solicitações para apresentação.</p>
+
+        <div style="margin-top:14px">
+          <button id="sample-login" class="btn primary">Entrar de demonstração</button>
+          <button id="open-login" class="btn ghost" style="margin-left:6px">Entrar</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    <div class="small">Apresentação — Conexão Aposentadoria.</div>
+  </footer>
+
+  <!-- modais -->
+  <div id="modal-login" class="modal-back">
+    <div class="modal">
+      <h3>Entrar ()</h3>
+      <p class="small">Faça um login de exemplo — não há verificação real.</p>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+        <input id="login-name" type="text" placeholder="Seu nome (ex: Maria)" style="padding:8px;border:1px solid #e6e9ee;border-radius:8px">
+        <input id="login-email" type="email" placeholder="email@exemplo.com" style="padding:8px;border:1px solid #e6e9ee;border-radius:8px">
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button id="login-cancel" class="btn ghost">Cancelar</button>
+          <button id="login-send" class="btn primary">Entrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-request" class="modal-back">
+    <div class="modal">
+      <h3 id="req-title">Solicitar atendimento</h3>
+      <p class="small" id="req-sub">Escreva uma nota breve para o advogado.</p>
+      <textarea id="req-note" rows="5" style="width:100%;margin-top:8px;padding:10px;border:1px solid #e6e9ee;border-radius:8px"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button id="req-cancel" class="btn ghost">Cancelar</button>
+        <button id="req-send" class="btn primary">Enviar solicitação</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-requests-list" class="modal-back">
+    <div class="modal">
+      <h3>Minhas solicitações</h3>
+      <div id="requests-container" class="req-list" style="margin-top:10px"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button id="requests-close" class="btn ghost">Fechar</button>
+        <button id="requests-clear" class="btn" style="margin-left:8px">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // dados de exemplo
+    const lawyers = [
+      {id:1,name:'Dra. Maria Oliveira',area:'Previdenciário',city:'Fortaleza',years:12,bio:'Atuação em aposentadorias por tempo de contribuição e revisões.',available:true},
+      {id:2,name:'Dr. João Santos',area:'Direito Previdenciário',city:'São Paulo',years:8,bio:'Experiência com perícias médicas e laudos.',available:false},
+      {id:3,name:'Dra. Helena Costa',area:'Aposentadoria Especial',city:'Recife',years:5,bio:'Aposentadoria especial por agentes nocivos.',available:true},
+      {id:4,name:'Dr. Carlos Medeiros',area:'Planejamento Previdenciário',city:'Fortaleza',years:15,bio:'Cálculos e planejamento pré-aposentadoria.',available:true}
+    ];
+
+    // elementos
+    const grid = document.getElementById('grid');
+    const q = document.getElementById('q');
+    const area = document.getElementById('area');
+    const onlyAvail = document.getElementById('onlyAvail');
+
+    const modalLogin = document.getElementById('modal-login');
+    const modalRequest = document.getElementById('modal-request');
+    const modalRequestsList = document.getElementById('modal-requests-list');
+
+    const btnLogin = document.getElementById('btn-login');
+    const btnLogout = document.getElementById('btn-logout');
+    const btnRequests = document.getElementById('btn-requests');
+    const userBubble = document.getElementById('user-bubble');
+    const sampleLogin = document.getElementById('sample-login');
+    const openLogin = document.getElementById('open-login');
+
+    const loginName = document.getElementById('login-name');
+    const loginEmail = document.getElementById('login-email');
+    const loginSend = document.getElementById('login-send');
+    const loginCancel = document.getElementById('login-cancel');
+
+    const reqTitle = document.getElementById('req-title');
+    const reqSub = document.getElementById('req-sub');
+    const reqNote = document.getElementById('req-note');
+    const reqSend = document.getElementById('req-send');
+    const reqCancel = document.getElementById('req-cancel');
+
+    const requestsContainer = document.getElementById('requests-container');
+    const requestsClose = document.getElementById('requests-close');
+    const requestsClear = document.getElementById('requests-clear');
+
+    let currentUser = null;
+    let selectedLawyer = null;
+
+    // localStorage helpers
+    const storage = {
+      getUser(){ try{ return JSON.parse(localStorage.getItem('ca_user')) }catch{return null} },
+      setUser(u){ localStorage.setItem('ca_user', JSON.stringify(u)) },
+      clearUser(){ localStorage.removeItem('ca_user') },
+      getRequests(){ try{ return JSON.parse(localStorage.getItem('ca_requests'))||[] }catch{return[]} },
+      setRequests(r){ localStorage.setItem('ca_requests', JSON.stringify(r)) }
+    };
+
+    // render grid
+    function render(){
+      const qq = q.value.trim().toLowerCase();
+      const ar = area.value.trim().toLowerCase();
+      const only = onlyAvail.checked;
+      grid.innerHTML = '';
+      const filtered = lawyers.filter(l=>{
+        if(only && !l.available) return false;
+        if(ar && !l.area.toLowerCase().includes(ar)) return false;
+        if(qq){
+          return l.name.toLowerCase().includes(qq) || l.city.toLowerCase().includes(qq) || l.bio.toLowerCase().includes(qq);
+        }
+        return true;
+      });
+
+      if(filtered.length===0){
+        grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);padding:12px">Nenhum advogado encontrado.</div>';
+        return;
+      }
+
+      for(const l of filtered){
+        const el = document.createElement('div'); el.className='lawyer';
+        el.innerHTML = `<div>
+            <div class="meta">
+              <div>
+                <div class="name">${l.name}</div>
+                <div style="font-size:13px;color:var(--muted)">${l.area} • ${l.city}</div>
+              </div>
+              <div class="chip ${l.available? 'available':'unavailable'}">${l.available? 'Disponível':'Indisponível'}</div>
+            </div>
+            <div class="bio">${l.bio}</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:8px">${l.years} anos</div>
+          </div>
+          <div class="actions">
+            <button class="btn ghost" onclick="viewProfile(${l.id})">Perfil</button>
+            <button class="btn primary" onclick="requestLawyer(${l.id})">Solicitar</button>
+          </div>`;
+        grid.appendChild(el);
+      }
+    }
+
+    // expose functions globally for inline onclick
+    window.viewProfile = function(id){
+      const l = lawyers.find(x=>x.id===id);
+      alert(`${l.name}\n${l.area} • ${l.city}\n\n${l.bio}`);
+    }
+
+    window.requestLawyer = function(id){
+      const l = lawyers.find(x=>x.id===id);
+      if(!l) return;
+      selectedLawyer = l;
+      // if no user, open login
+      if(!currentUser){
+        openModal(modalLogin);
+        return;
+      }
+      reqTitle.textContent = `Solicitar: ${l.name}`;
+      reqSub.textContent = `Área: ${l.area} — Cidade: ${l.city}`;
+      reqNote.value = '';
+      openModal(modalRequest);
+    }
+
+    // modal helpers
+    function openModal(el){ el.style.display='flex'; }
+    function closeModal(el){ el.style.display='none'; }
+
+    // login flows
+    btnLogin.addEventListener('click', ()=> openModal(modalLogin));
+    openLogin.addEventListener('click', ()=> openModal(modalLogin));
+    sampleLogin.addEventListener('click', ()=>{
+      const u = {name:'Usuário Exemplo', email:'usuario@exemplo.com', loggedAt:new Date().toISOString()};
+      storage.setUser(u); initUser(); closeModal(modalLogin);
+    });
+
+    loginSend.addEventListener('click', ()=>{
+      const name = loginName.value.trim();
+      const email = loginEmail.value.trim();
+      if(!name || !email){ alert('Preencha nome e email.'); return; }
+      const u = {name,email,loggedAt:new Date().toISOString()};
+      storage.setUser(u); initUser(); closeModal(modalLogin);
+    });
+    loginCancel.addEventListener('click', ()=> closeModal(modalLogin));
+
+    btnLogout.addEventListener('click', ()=>{ storage.clearUser(); initUser(); });
+
+    // request modal
+    reqCancel.addEventListener('click', ()=> closeModal(modalRequest));
+    reqSend.addEventListener('click', ()=>{
+      if(!selectedLawyer){ alert('Nenhum advogado selecionado'); closeModal(modalRequest); return; }
+      const note = reqNote.value.trim();
+      const req = {
+        id: Math.random().toString(36).slice(2,9),
+        lawyerId: selectedLawyer.id,
+        lawyerName: selectedLawyer.name,
+        userName: currentUser.name,
+        userEmail: currentUser.email,
+        note,
+        createdAt: new Date().toISOString(),
+        status: 'Enviada'
+      };
+      const arr = storage.getRequests(); arr.unshift(req); storage.setRequests(arr);
+      alert('Solicitação enviada ().');
+      closeModal(modalRequest);
+    });
+
+    // requests list
+    btnRequests.addEventListener('click', ()=>{
+      loadRequestsList(); openModal(modalRequestsList);
+    });
+    requestsClose.addEventListener('click', ()=> closeModal(modalRequestsList));
+    requestsClear.addEventListener('click', ()=>{ if(confirm('Limpar todas as solicitações?')){ storage.setRequests([]); loadRequestsList(); }});
+
+    function loadRequestsList(){
+      const arr = storage.getRequests();
+      requestsContainer.innerHTML = '';
+      if(arr.length===0){ requestsContainer.innerHTML = '<div class="small">Você não tem solicitações.</div>'; return; }
+      for(const r of arr){
+        const d = document.createElement('div'); d.className='req-item';
+        d.innerHTML = `<div style="font-weight:600">${r.lawyerName} <span style=\"font-weight:400;color:var(--muted);font-size:13px\">— ${new Date(r.createdAt).toLocaleString()}</span></div>
+            <div style="margin-top:6px;color:var(--muted)">${r.note || '<i>Sem nota</i>'}</div>
+            <div style="margin-top:8px;font-size:13px;color:var(--muted)">Status: ${r.status} • Solicitante: ${r.userName}</div>`;
+        requestsContainer.appendChild(d);
+      }
+    }
+
+    // initialize user state from storage
+    function initUser(){
+      currentUser = storage.getUser();
+      if(currentUser){
+        userBubble.textContent = `Olá, ${currentUser.name.split(' ')[0]}`;
+        btnLogin.style.display='none'; btnLogout.style.display='inline-block';
+      } else {
+        userBubble.textContent = '';
+        btnLogin.style.display='inline-block'; btnLogout.style.display='none';
+      }
+    }
+
+    // close modals by clicking outside
+    document.querySelectorAll('.modal-back').forEach(m=>m.addEventListener('click', e=>{ if(e.target===m) m.style.display='none'; }));
+
+    // live search
+    [q,area,onlyAvail].forEach(el=>el.addEventListener('input', render));
+
+    // initial
+    initUser(); render();
+  </script>
+</body>
+</html>
